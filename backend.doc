@@ -1,0 +1,451 @@
+*Routes:**
+```
+/api/auth/**     → AUTH-SERVICE
+/api/users/**    → USER-SERVICE
+/api/movies/**   → MOVIE-SERVICE
+/api/theaters/** → THEATER-SERVICE
+/api/showtimes/**→ THEATER-SERVICE
+/api/bookings/** → BOOKING-SERVICE
+```
+
+---
+
+### 3.3 Auth Service
+
+**Port:** 8085  
+**Purpose:** Authentication and authorization  
+**Database:** None (stateless)  
+
+**Responsibilities:**
+- User registration (via User Service)
+- User login
+- JWT token generation
+- Token validation
+- Password encryption (BCrypt)
+
+**Key Endpoints:**
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/api/auth/register` | Register new user | No |
+| POST | `/api/auth/login` | User login | No |
+| GET | `/api/auth/validate` | Validate JWT token | Yes |
+
+**Dependencies:**
+- Calls User Service via Feign Client
+- Uses BCryptPasswordEncoder for passwords
+- Generates JWT with HS512 algorithm
+
+---
+
+### 3.4 User Service
+
+**Port:** 8081  
+**Purpose:** User profile management  
+**Database:** `user_db`  
+
+**Responsibilities:**
+- User CRUD operations
+- Profile management
+- Role management (CUSTOMER, ADMIN, THEATER_OWNER)
+- User activation/deactivation
+
+**Key Endpoints:**
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/api/users` | Create user | No* |
+| GET | `/api/users/{id}` | Get user by ID | Yes |
+| GET | `/api/users/email/{email}` | Get user by email | Yes |
+| GET | `/api/users` | Get all users | Yes (ADMIN) |
+| PUT | `/api/users/{id}` | Update user | Yes |
+| DELETE | `/api/users/{id}` | Delete user | Yes (ADMIN) |
+
+*Accessible from Auth Service for registration
+
+**Database Schema:**
+```sql
+CREATE TABLE users (
+    id BIGSERIAL PRIMARY KEY,
+    first_name VARCHAR(255) NOT NULL,
+    last_name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    phone_number VARCHAR(10) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(50) NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL
+);
+```
+
+---
+
+### 3.5 Movie Service
+
+**Port:** 8082  
+**Purpose:** Movie catalog management  
+**Database:** `movie_db`  
+
+**Responsibilities:**
+- Movie CRUD operations
+- Search by title, genre, language
+- Filter by status (NOW_SHOWING, COMING_SOON, ARCHIVED)
+- Movie metadata management
+
+**Key Endpoints:**
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/api/movies` | Create movie | Yes (ADMIN) |
+| GET | `/api/movies/{id}` | Get movie by ID | No |
+| GET | `/api/movies` | Get all movies | No |
+| GET | `/api/movies/status/{status}` | Get by status | No |
+| GET | `/api/movies/genre/{genre}` | Get by genre | No |
+| GET | `/api/movies/search?title={title}` | Search by title | No |
+| PUT | `/api/movies/{id}` | Update movie | Yes (ADMIN) |
+| DELETE | `/api/movies/{id}` | Delete movie | Yes (ADMIN) |
+
+**Database Schema:**
+```sql
+CREATE TABLE movies (
+    id BIGSERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    director VARCHAR(255) NOT NULL,
+    language VARCHAR(100) NOT NULL,
+    genre VARCHAR(50) NOT NULL,
+    duration_minutes INTEGER NOT NULL,
+    release_date DATE NOT NULL,
+    rating NUMERIC(3,1),
+    cast TEXT NOT NULL,
+    poster_url VARCHAR(500),
+    trailer_url VARCHAR(500),
+    status VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL
+);
+```
+
+**Enums:**
+- **Genre:** ACTION, COMEDY, DRAMA, HORROR, ROMANCE, SCI_FI, THRILLER, ANIMATION, DOCUMENTARY, FANTASY
+- **Status:** COMING_SOON, NOW_SHOWING, ARCHIVED
+
+---
+
+### 3.6 Theater Service
+
+**Port:** 8083  
+**Purpose:** Theater and showtime management  
+**Database:** `theater_db`  
+
+**Responsibilities:**
+- Theater CRUD operations
+- Showtime scheduling
+- Seat availability management
+- Conflict detection for showtimes
+- Seat reservation/release
+
+**Key Endpoints:**
+
+**Theaters:**
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/api/theaters` | Create theater | Yes (ADMIN) |
+| GET | `/api/theaters/{id}` | Get theater by ID | No |
+| GET | `/api/theaters` | Get all theaters | No |
+| GET | `/api/theaters/city/{city}` | Get by city | No |
+| PUT | `/api/theaters/{id}` | Update theater | Yes (ADMIN) |
+| DELETE | `/api/theaters/{id}` | Delete theater | Yes (ADMIN) |
+
+**Showtimes:**
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/api/showtimes` | Create showtime | Yes (ADMIN) |
+| GET | `/api/showtimes/{id}` | Get showtime | No |
+| GET | `/api/showtimes/movie/{movieId}` | Get by movie | No |
+| GET | `/api/showtimes/theater/{theaterId}` | Get by theater | No |
+| PATCH | `/api/showtimes/{id}/reserve?numberOfSeats={n}` | Reserve seats | Yes* |
+| PATCH | `/api/showtimes/{id}/release?numberOfSeats={n}` | Release seats | Yes* |
+
+*Called internally by Booking Service
+
+**Database Schema:**
+```sql
+CREATE TABLE theaters (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    address VARCHAR(500) NOT NULL,
+    city VARCHAR(100) NOT NULL,
+    state VARCHAR(100) NOT NULL,
+    zip_code VARCHAR(6) NOT NULL,
+    phone_number VARCHAR(10) NOT NULL,
+    total_screens INTEGER NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL
+);
+
+CREATE TABLE showtimes (
+    id BIGSERIAL PRIMARY KEY,
+    movie_id BIGINT NOT NULL,
+    theater_id BIGINT NOT NULL,
+    screen_number INTEGER NOT NULL,
+    show_date_time TIMESTAMP NOT NULL,
+    total_seats INTEGER NOT NULL,
+    available_seats INTEGER NOT NULL,
+    price_per_seat NUMERIC(10,2) NOT NULL,
+    status VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL
+);
+```
+
+**Business Logic:**
+- Prevents double-booking on same screen
+- 3-hour buffer between showtimes (movie + cleanup)
+- Real-time seat availability tracking
+
+---
+
+### 3.7 Booking Service
+
+**Port:** 8084  
+**Purpose:** Ticket booking and reservation management  
+**Database:** `booking_db`  
+
+**Responsibilities:**
+- Create bookings
+- Seat reservation coordination
+- Payment status tracking
+- Booking cancellation with seat release
+- Multi-service orchestration
+
+**Key Endpoints:**
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/api/bookings` | Create booking | Yes |
+| GET | `/api/bookings/{id}` | Get booking by ID | Yes |
+| GET | `/api/bookings/reference/{ref}` | Get by reference | Yes |
+| GET | `/api/bookings/user/{userId}` | Get user bookings | Yes |
+| GET | `/api/bookings/showtime/{showtimeId}` | Get showtime bookings | Yes (ADMIN) |
+| PATCH | `/api/bookings/{id}/confirm` | Confirm booking | Yes |
+| PATCH | `/api/bookings/{id}/cancel` | Cancel booking | Yes |
+| PATCH | `/api/bookings/{id}/payment?status={status}` | Update payment | Yes |
+
+**Database Schema:**
+```sql
+CREATE TABLE bookings (
+    id BIGSERIAL PRIMARY KEY,
+    booking_reference VARCHAR(50) UNIQUE NOT NULL,
+    user_id BIGINT NOT NULL,
+    showtime_id BIGINT NOT NULL,
+    movie_id BIGINT NOT NULL,
+    theater_id BIGINT NOT NULL,
+    number_of_seats INTEGER NOT NULL,
+    total_amount NUMERIC(10,2) NOT NULL,
+    status VARCHAR(50) NOT NULL,
+    payment_status VARCHAR(50) NOT NULL,
+    booking_date_time TIMESTAMP NOT NULL,
+    seat_numbers VARCHAR(500),
+    special_requests TEXT,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL
+);
+```
+
+**Enums:**
+- **BookingStatus:** PENDING, CONFIRMED, CANCELLED, COMPLETED
+- **PaymentStatus:** PENDING, PAID, REFUNDED, FAILED
+
+**Service Orchestration:**
+```
+Booking Creation Flow:
+1. Validate User (via User Service)
+2. Get Showtime details (via Theater Service)
+3. Validate Movie (via Movie Service)
+4. Check seat availability
+5. Reserve seats (via Theater Service)
+6. Create booking record
+7. Return booking confirmation
+```
+
+---
+
+## 4. Technology Stack
+
+### 4.1 Backend Technologies
+
+| Category | Technology | Version | Purpose |
+|----------|-----------|---------|---------|
+| **Language** | Java | 21 | Core programming language |
+| **Framework** | Spring Boot | 4.0.2 | Application framework |
+| **Cloud** | Spring Cloud | 2024.0.0 | Microservices infrastructure |
+| **Service Discovery** | Eureka | 2024.0.0 | Service registry |
+| **API Gateway** | Spring Cloud Gateway | 2024.0.0 | Routing and filtering |
+| **REST Client** | OpenFeign | 2024.0.0 | Inter-service communication |
+| **Database** | PostgreSQL | 15+ | Relational database |
+| **ORM** | Hibernate/JPA | 6.x | Object-relational mapping |
+| **Security** | Spring Security | 6.x | Authentication/Authorization |
+| **JWT** | JJWT | 0.12.3 | Token generation/validation |
+| **Validation** | Jakarta Validation | 3.x | Input validation |
+| **Mapper** | MapStruct | 1.5.5 | DTO-Entity mapping |
+| **Build Tool** | Maven | 3.9+ | Dependency management |
+| **Documentation** | SpringDoc OpenAPI | 2.3.0 | API documentation |
+| **Monitoring** | Spring Actuator | 4.0.2 | Health checks |
+
+### 5.3 Authorization Matrix
+
+| Endpoint | CUSTOMER | ADMIN | THEATER_OWNER |
+|----------|----------|-------|---------------|
+| **Movies** |
+| GET /api/movies | ✅ | ✅ | ✅ |
+| POST /api/movies | ❌ | ✅ | ❌ |
+| PUT /api/movies/{id} | ❌ | ✅ | ❌ |
+| DELETE /api/movies/{id} | ❌ | ✅ | ❌ |
+| **Theaters** |
+| GET /api/theaters | ✅ | ✅ | ✅ |
+| POST /api/theaters | ❌ | ✅ | ✅ |
+| PUT /api/theaters/{id} | ❌ | ✅ | ✅ |
+| DELETE /api/theaters/{id} | ❌ | ✅ | ❌ |
+| **Showtimes** |
+| GET /api/showtimes | ✅ | ✅ | ✅ |
+| POST /api/showtimes | ❌ | ✅ | ✅ |
+| PUT /api/showtimes/{id} | ❌ | ✅ | ✅ |
+| **Bookings** |
+| POST /api/bookings | ✅ | ✅ | ✅ |
+| GET /api/bookings/user/{userId} | ✅ (own) | ✅ (all) | ✅ (all) |
+| PATCH /api/bookings/{id}/cancel | ✅ (own) | ✅ (all) | ✅ (all) |
+
+### 5.4 Security Layers
+
+**Layer 1: API Gateway**
+- JWT token validation
+- Rate limiting
+- CORS configuration
+- Request sanitization
+
+**Layer 2: Service-Level**
+- Gateway authentication filter
+- Prevents direct service access
+- Validates X-User-Id and X-User-Role headers
+
+**Layer 3: Method-Level** (Future Enhancement)
+- @PreAuthorize annotations
+- Role-based access control
+- Custom security expressions
+
+### 5.5 Password Security
+
+- **Algorithm:** BCrypt
+- **Strength:** 10 rounds
+- **Salt:** Automatically generated per password
+- **Storage:** Never stored in plain text
+
+
+### 6.3 Sample API Calls
+
+#### Register User
+```bash
+POST http://localhost:8080/api/auth/register
+Content-Type: application/json
+
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john.doe@example.com",
+  "phoneNumber": "1234567890",
+  "password": "SecurePass123"
+}
+```
+
+#### Login
+```bash
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "john.doe@example.com",
+  "password": "SecurePass123"
+}
+```
+
+#### Create Movie
+```bash
+POST http://localhost:8080/api/movies
+Authorization: Bearer {JWT_TOKEN}
+Content-Type: application/json
+
+{
+  "title": "Inception",
+  "description": "A mind-bending thriller",
+  "director": "Christopher Nolan",
+  "language": "English",
+  "genre": "SCI_FI",
+  "durationMinutes": 148,
+  "releaseDate": "2010-07-16",
+  "rating": 8.8,
+  "cast": "Leonardo DiCaprio, Marion Cotillard",
+  "posterUrl": "https://example.com/poster.jpg",
+  "trailerUrl": "https://example.com/trailer.mp4",
+  "status": "NOW_SHOWING"
+}
+```
+
+#### Create Booking
+```bash
+POST http://localhost:8080/api/bookings
+Authorization: Bearer {JWT_TOKEN}
+Content-Type: application/json
+
+{
+  "userId": 1,
+  "showtimeId": 5,
+  "numberOfSeats": 2,
+  "seatNumbers": "A1, A2",
+  "specialRequests": "Wheelchair accessible"
+}
+```
+
+---
+
+**End-to-End User Journey:**
+
+```bash
+# 1. Register User
+curl -X POST http://localhost:8080/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "firstName": "Test",
+    "lastName": "User",
+    "email": "test@example.com",
+    "phoneNumber": "9876543210",
+    "password": "Test@123"
+  }'
+
+# Save the token from response
+TOKEN="eyJhbGciOiJIUzUxMiJ9..."
+
+# 2. Browse Movies
+curl http://localhost:8080/api/movies
+
+# 3. Get Movie Showtimes
+curl http://localhost:8080/api/showtimes/movie/1
+
+# 4. Create Booking
+curl -X POST http://localhost:8080/api/bookings \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userId": 1,
+    "showtimeId": 1,
+    "numberOfSeats": 2
+  }'
+
+# 5. Get My Bookings
+curl http://localhost:8080/api/bookings/user/1 \
+  -H "Authorization: Bearer $TOKEN"
+```

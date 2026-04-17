@@ -60,7 +60,7 @@ const Login = () => {
       else if (data.role === "THEATER_MANAGER") navigate("/manager/dashboard");
       else navigate("/movies");
     } catch {
-      toast.error("Cannot reach server — is Docker running?");
+      toast.error("Cannot connect to server. Please try again later.");
     } finally {
       setLoading(false);
     }
@@ -276,15 +276,6 @@ const Login = () => {
                   <Link to="/register" className="login-footer-link">
                     Create one
                   </Link>
-                </p>
-                <div className="login-divider">
-                  <span className="login-divider-text">Admin?</span>
-                </div>
-                <p className="login-admin-hint">
-                  Default credentials:{" "}
-                  <code className="login-code">admin@moviereserve.com</code>
-                  {" / "}
-                  <code className="login-code">Admin@1234</code>
                 </p>
               </motion.div>
             </form>

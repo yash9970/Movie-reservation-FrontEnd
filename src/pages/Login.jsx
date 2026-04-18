@@ -125,25 +125,6 @@ const Login = () => {
                 <div key={i} className="login-filmstrip-frame" />
               ))}
             </motion.div>
-
-            {/* Stats */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.9 }}
-              className="login-stats"
-            >
-              {[
-                { label: "Movies", value: "500+" },
-                { label: "Theaters", value: "50+" },
-                { label: "Happy Fans", value: "1M+" },
-              ].map((stat) => (
-                <div key={stat.label} className="login-stat">
-                  <span className="login-stat-value">{stat.value}</span>
-                  <span className="login-stat-label">{stat.label}</span>
-                </div>
-              ))}
-            </motion.div>
           </div>
         </motion.div>
 

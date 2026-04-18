@@ -19,10 +19,7 @@ const Layout = ({ children }) => {
       return [
         { label: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
         { label: 'Movies', path: '/admin/movies', icon: Film },
-        { label: 'Theaters', path: '/admin/theaters', icon: Settings },
-        { label: 'Box Office (POS)', path: '/admin/box-office', icon: ShoppingCart },
         { label: 'Privileged Users', path: '/admin/setup', icon: Shield },
-        { label: 'My Bookings', path: '/my-bookings', icon: Ticket },
       ];
     } else if (user?.role === 'THEATER_OWNER') {
       return [

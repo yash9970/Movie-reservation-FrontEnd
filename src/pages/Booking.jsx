@@ -119,6 +119,7 @@ const Booking = () => {
           showtimeId: Number(showtimeId),
           numberOfSeats: selectedSeats.length,
           seatNumbers: selectedSeats.join(", "),
+          totalAmount: totalPrice,
           specialRequests: isBoxOfficeMode ? "OFFLINE_BOXOFFICE" : "",
         }),
       });

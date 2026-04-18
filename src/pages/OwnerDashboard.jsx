@@ -202,7 +202,7 @@ const OwnerDashboard = () => {
                 />
                 <StatCard
                     title="Revenue"
-                    value={`$${stats.totalRevenue.toFixed(2)}`}
+                    value={`₹${stats.totalRevenue.toFixed(2)}`}
                     icon={DollarSign}
                     color="from-green-500 to-green-600"
                 />

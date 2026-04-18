@@ -28,10 +28,10 @@ export const formatShowtime = (datetime) => {
 /**
  * Formats a price value
  * @param {number} amount - Amount to format
- * @param {string} currency - Currency symbol (default: '$')
+ * @param {string} currency - Currency symbol (default: '₹')
  * @returns {string} - Formatted price
  */
-export const formatPrice = (amount, currency = '$') => {
+export const formatPrice = (amount, currency = '₹') => {
     if (typeof amount !== 'number') {
         amount = parseFloat(amount);
     }

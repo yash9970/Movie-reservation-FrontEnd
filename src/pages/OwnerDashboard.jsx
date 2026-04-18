@@ -283,8 +283,12 @@ const OwnerDashboard = () => {
                         </ResponsiveContainer>
                     </div>
                 ) : (
-                    <div className="h-[300px] w-full flex items-center justify-center border-2 border-dashed border-white/10 rounded-xl">
-                         <p className="text-gray-500 font-medium">Not enough transaction data to plot chart.</p>
+                    <div className="h-[300px] w-full flex flex-col items-center justify-center border-2 border-dashed border-white/10 rounded-xl gap-3">
+                         <div className="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center">
+                             <DollarSign className="w-6 h-6 text-green-500/50" />
+                         </div>
+                         <p className="text-gray-400 font-semibold">No revenue data yet</p>
+                         <p className="text-gray-600 text-sm">Confirmed bookings will appear here automatically</p>
                     </div>
                 )}
             </motion.div>

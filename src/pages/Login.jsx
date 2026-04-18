@@ -111,7 +111,7 @@ const Login = () => {
               transition={{ delay: 0.5 }}
               className="login-brand-tagline"
             >
-              Your premium movie<br />reservation experience
+              Book seats, F&B and<br />manage your cinema — all in one place
             </motion.p>
 
             {/* Film strip decoration */}

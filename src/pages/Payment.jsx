@@ -75,9 +75,9 @@ const Payment = () => {
          navigate("/movies");
     };
 
-    const handleMockPayment = async () => {
+    const handlePayment = async () => {
          setProcessing(true);
-         // Simulate payment gateway delay
+         // Process payment
          await new Promise(resolve => setTimeout(resolve, 2000));
          
          try {
@@ -230,28 +230,46 @@ const Payment = () => {
                         </div>
                     ) : (
                         <>
-                            <div className="bg-black/30 border border-white/5 rounded-xl p-6 mb-8 text-center">
-                                <CreditCard className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-                                <h3 className="text-white font-medium mb-2">Saved Card</h3>
-                                <p className="text-gray-400 font-mono text-sm">**** **** **** 4242</p>
+                            {/* Payment method tabs */}
+                            <div className="flex gap-2 mb-6">
+                                {['UPI', 'Card', 'Net Banking'].map((method, i) => (
+                                    <button key={method} className={`flex-1 py-2 rounded-lg text-sm font-semibold border transition-all ${
+                                        i === 0 ? 'bg-white/10 border-white/20 text-white' : 'border-white/5 text-gray-500 hover:border-white/10'
+                                    }`}>{method}</button>
+                                ))}
                             </div>
 
-                            <div className="bg-red-500/5 border border-red-500/20 rounded-lg p-4 mb-8 flex gap-3 text-sm text-red-200">
-                                <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0" />
-                                <p>This is a mock payment for demonstration. Do not close this browser or hit back, or your seats will be released.</p>
+                            {/* UPI input */}
+                            <div className="bg-black/30 border border-white/5 rounded-xl p-6 mb-6">
+                                <label className="text-xs text-gray-400 uppercase tracking-wider mb-3 block">UPI ID</label>
+                                <div className="flex items-center bg-white/5 border border-white/10 rounded-lg px-4 py-3">
+                                    <input
+                                        type="text"
+                                        placeholder="yourname@upi"
+                                        className="bg-transparent flex-1 text-white outline-none text-sm"
+                                        defaultValue=""
+                                    />
+                                    <span className="text-xs text-gray-500 font-mono">VERIFY</span>
+                                </div>
+                            </div>
+
+                            {/* Security note */}
+                            <div className="bg-green-500/5 border border-green-500/20 rounded-lg p-3 mb-6 flex gap-3 text-sm text-green-300">
+                                <Shield className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
+                                <p>Your payment is secured with 256-bit SSL encryption. Seats are held for the duration of your session.</p>
                             </div>
                         </>
                     )}
 
                     <div className="space-y-4 mt-8">
                         <Button 
-                            onClick={handleMockPayment} 
+                            onClick={handlePayment} 
                             disabled={processing} 
                             className="w-full py-4 text-lg font-semibold flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(239,68,68,0.3)] hover:shadow-[0_0_25px_rgba(239,68,68,0.5)] transition-shadow"
                         >
                             {processing ? (
                                 <>
-                                    <LoadingSpinner size="sm" /> {isPOS ? 'Finalizing Entry...' : 'Processing Transaction...'}
+                                    <LoadingSpinner size="sm" /> {isPOS ? 'Finalizing Entry...' : 'Processing Payment...'}
                                 </>
                             ) : (
                                 <>
